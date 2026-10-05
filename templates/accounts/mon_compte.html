@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block titre %}Mon compte{% endblock %}
+{% block contenu %}
+<h1>Mon compte</h1>
+<div class="grille">
+  <div class="carte">
+    <h2>Informations</h2>
+    <p><strong>{{ user.get_full_name }}</strong><br>
+    Identifiant : {{ user.username }}<br>
+    Rôle : {{ user.get_role_display }}<br>
+    {% if user.email %}E-mail : {{ user.email }}<br>{% endif %}
+    {% if user.est_eleve and user.eleve.classe %}Classe : {{ user.eleve.classe }}{% endif %}</p>
+    {% if enfants %}<h3>Mes enfants</h3><ul>{% for e in enfants %}<li>{{ e }} — {{ e.classe|default:"sans classe" }}</li>{% endfor %}</ul>{% endif %}
+    <p class="discret">Pour corriger une information, contactez l'administration.</p>
+    <a class="btn btn-secondaire" href="{% url 'accounts:changer_mdp' %}">Changer mon mot de passe</a>
+  </div>
+  <div class="carte">
+    <h2>Préférences</h2>
+    <form method="post">{% csrf_token %}{% include "_form.html" %}<button type="submit">Enregistrer</button></form>
+  </div>
+  <div class="carte">
+    <h2>Mes données personnelles</h2>
+    <p class="discret">Conformément au RGPD, vous pouvez télécharger une copie de vos données (et de celles de vos enfants mineurs pour un parent).</p>
+    <form method="post" action="{% url 'accounts:export' %}">{% csrf_token %}<button type="submit" class="btn-secondaire btn">Télécharger mes données (JSON)</button></form>
+  </div>
+</div>
+{% endblock %}

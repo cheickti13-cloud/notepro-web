@@ -1,0 +1,63 @@
+{
+  "expo": {
+    "name": "NotePro",
+    "slug": "notepro",
+    "scheme": "notepro",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "description": "Votre école, toujours avec vous — vie scolaire pour élèves, parents, enseignants et administration.",
+    "ios": {
+      "bundleIdentifier": "com.notepro.app",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "NotePro utilise Face ID pour vous connecter rapidement et en toute sécurité.",
+        "NSCalendarsUsageDescription": "NotePro ajoute l'emploi du temps à votre calendrier si vous le demandez.",
+        "NSCalendarsFullAccessUsageDescription": "NotePro ajoute l'emploi du temps à votre calendrier si vous le demandez.",
+        "NSCameraUsageDescription": "NotePro utilise l'appareil photo pour joindre un justificatif ou un devoir.",
+        "NSPhotoLibraryUsageDescription": "NotePro accède à vos photos pour joindre un justificatif ou un devoir."
+      }
+    },
+    "android": {
+      "package": "com.notepro.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0B1F3A"
+      },
+      "permissions": ["USE_BIOMETRIC", "USE_FINGERPRINT", "READ_CALENDAR", "WRITE_CALENDAR", "CAMERA"]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-secure-store",
+      "expo-web-browser",
+      ["expo-splash-screen", {
+        "image": "./assets/splash-icon.png",
+        "imageWidth": 140,
+        "resizeMode": "contain",
+        "backgroundColor": "#0B1F3A"
+      }],
+      ["expo-local-authentication", {
+        "faceIDPermission": "NotePro utilise Face ID pour vous connecter rapidement et en toute sécurité."
+      }],
+      ["expo-notifications", { "color": "#0B1F3A" }],
+      ["expo-calendar", {
+        "calendarPermission": "NotePro ajoute l'emploi du temps à votre calendrier si vous le demandez."
+      }],
+      ["expo-image-picker", {
+        "photosPermission": "NotePro accède à vos photos pour joindre un justificatif ou un devoir.",
+        "cameraPermission": "NotePro utilise l'appareil photo pour joindre un justificatif ou un devoir."
+      }]
+    ],
+    "experiments": { "typedRoutes": false },
+    "extra": {
+      "eas": { "projectId": "" }
+    }
+  }
+}

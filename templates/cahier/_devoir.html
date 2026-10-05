@@ -1,0 +1,5 @@
+<div class="cours" style="--couleur: {{ d.enseignement.matiere.couleur }}">
+  <strong>{{ d.enseignement.matiere }}</strong> — {{ d.titre }}{% if d.duree_estimee %} <span class="discret">(~{{ d.duree_estimee }} min)</span>{% endif %}
+  {% if d.description %}<div class="corps">{{ d.description }}</div>{% endif %}
+  <div class="discret">Donné le {{ d.donne_le|date:"d/m" }} par {{ d.enseignement.enseignant }}</div>
+</div>

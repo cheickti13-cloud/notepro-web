@@ -1,0 +1,16 @@
+<div class="grille">
+  <div class="carte">
+    <h3>Notifications non lues</h3>
+    <ul class="liste">
+    {% for n in notifications %}<li><span>{{ n.titre }}</span><span class="etiquette {% if n.importante %}ko{% else %}info{% endif %}">{{ n.get_type_display }}</span></li>{% empty %}<li class="vide">Rien de nouveau.</li>{% endfor %}
+    </ul>
+    <a href="{% url 'messagerie:notifications' %}">Toutes les notifications →</a>
+  </div>
+  <div class="carte">
+    <h3>Informations récentes</h3>
+    <ul class="liste">
+    {% for a in annonces %}<li><span>{% if a.importante %}<span class="etiquette ko">Important</span> {% endif %}<strong>{{ a.titre }}</strong></span><span class="discret">{{ a.publiee_le|date:"d/m" }}</span></li>{% empty %}<li class="vide">Aucune information récente.</li>{% endfor %}
+    </ul>
+    <a href="{% url 'messagerie:annonces' %}">Toutes les informations →</a>
+  </div>
+</div>

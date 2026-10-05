@@ -1,0 +1,14 @@
+{% comment %}Rendu générique d'un formulaire Django.{% endcomment %}
+{% if form.non_field_errors %}<ul class="errorlist">{% for e in form.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+{% for champ in form.hidden_fields %}{{ champ }}{% endfor %}
+{% for champ in form.visible_fields %}
+<p>
+  {% if champ.field.widget.input_type == "checkbox" %}
+    <label>{{ champ }} {{ champ.label }}</label>
+  {% else %}
+    {{ champ.label_tag }} {{ champ }}
+  {% endif %}
+  {% if champ.help_text %}<span class="helptext">{{ champ.help_text }}</span>{% endif %}
+  {{ champ.errors }}
+</p>
+{% endfor %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block titre %}Informations{% endblock %}
+{% block contenu %}
+<div class="barre-outils">
+  <h1>Informations de l'établissement</h1>
+  {% if user.est_admin %}<a class="btn" href="{% url 'messagerie:nouvelle_annonce' %}">+ Nouvelle information</a>{% endif %}
+</div>
+{% for a in annonces %}
+  <div class="carte">
+    <div class="discret">{{ a.publiee_le|date:"d/m/Y" }}{% if a.classe %} · {{ a.classe }}{% endif %}{% if a.importante %} · <span class="etiquette ko">Important</span>{% endif %}</div>
+    <h3>{{ a.titre }}</h3><div class="corps">{{ a.contenu }}</div>
+  </div>
+{% empty %}<div class="carte">Aucune information.</div>{% endfor %}
+{% endblock %}

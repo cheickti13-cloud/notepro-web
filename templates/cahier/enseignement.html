@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block titre %}Cahier de texte{% endblock %}
+{% block contenu %}
+<div class="barre-outils">
+  <h1>Cahier de texte — {{ ens.matiere }} · {{ ens.classe }}</h1>
+  <div><a class="btn" href="{% url 'cahier:devoir_creer' ens.pk %}">+ Devoir</a> <a class="btn btn-secondaire" href="{% url 'cahier:contenu_creer' ens.pk %}">+ Contenu de séance</a></div>
+</div>
+<div class="grille">
+  <section>
+    <h2>Devoirs</h2>
+    <div class="tableau"><table>
+      <tr><th>Pour le</th><th>Titre</th><th class="num">Faits</th><th></th></tr>
+      {% for d in devoirs %}
+      <tr><td>{{ d.pour_le|date:"d/m/Y" }}</td><td>{{ d.titre }}</td><td class="num">{{ d.faits_par.count }}/{{ effectif }}</td>
+        <td><a href="{% url 'cahier:devoir_modifier' ens.pk d.pk %}">modifier</a> ·
+          <form class="inline" method="post" action="{% url 'cahier:supprimer' 'devoir' d.pk %}">{% csrf_token %}<button class="lien" data-confirm="Supprimer ce devoir ?">supprimer</button></form></td></tr>
+      {% empty %}<tr><td colspan="4" class="discret">Aucun devoir.</td></tr>{% endfor %}
+    </table></div>
+  </section>
+  <section>
+    <h2>Séances</h2>
+    {% for c in contenus %}
+      <div class="carte"><div class="discret">{{ c.date|date:"D d/m/Y" }}</div><h3>{{ c.titre }}</h3><div class="corps">{{ c.contenu|truncatechars:400 }}</div>
+        <a href="{% url 'cahier:contenu_modifier' ens.pk c.pk %}">modifier</a> ·
+        <form class="inline" method="post" action="{% url 'cahier:supprimer' 'contenu' c.pk %}">{% csrf_token %}<button class="lien" data-confirm="Supprimer ce contenu ?">supprimer</button></form>
+      </div>
+    {% empty %}<div class="carte">Aucun contenu.</div>{% endfor %}
+  </section>
+</div>
+{% endblock %}

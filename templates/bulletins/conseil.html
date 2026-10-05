@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block titre %}Conseil de classe{% endblock %}
+{% block contenu %}
+<div class="barre-outils">
+  <h1>Conseil de classe — {{ classe }} · {{ periode.nom }}</h1>
+  <div>{% if publie %}<span class="etiquette ok">Publié</span>{% else %}<span class="etiquette attente">Non publié</span>{% endif %}
+    <a class="btn btn-secondaire" href="{% url 'bulletins:pdf_classe' classe.pk periode.pk %}">Aperçu PDF de la classe</a></div>
+</div>
+{% include "_choix_periode.html" %}
+<form method="post">
+  {% csrf_token %}
+  <div class="tableau"><table>
+    <tr><th class="num">Rang</th><th>Élève</th><th class="num">Moy. gén.</th><th>Appréciation générale</th><th>Mention</th><th></th></tr>
+    {% for l in lignes %}
+    <tr><td class="num">{{ l.rang|default:"—" }}</td><td>{{ l.eleve }}</td><td class="num"><strong>{{ l.moyenne|floatformat:2|default:"—" }}</strong></td>
+      <td><textarea name="app_{{ l.eleve.pk }}" rows="2" maxlength="1000" aria-label="Appréciation générale pour {{ l.eleve }}">{{ l.texte }}</textarea></td>
+      <td><select name="mention_{{ l.eleve.pk }}" aria-label="Mention">{% for v, lib in mentions %}<option value="{{ v }}" {% if v == l.mention %}selected{% endif %}>{{ lib }}</option>{% endfor %}</select></td>
+      <td><a href="{% url 'bulletins:pdf_eleve' l.eleve.pk periode.pk %}">PDF</a></td></tr>
+    {% endfor %}
+  </table></div>
+  <p style="margin-top:1rem"><button type="submit">Enregistrer</button></p>
+</form>
+{% endblock %}

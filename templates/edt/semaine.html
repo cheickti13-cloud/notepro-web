@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block titre %}Emploi du temps{% endblock %}
+{% block contenu %}
+<div class="barre-outils">
+  <h1>Emploi du temps — {{ titre }}</h1>
+  <div>
+    <a class="btn btn-secondaire" href="?semaine={{ semaine_prec|date:'Y-m-d' }}{% if eleve %}&eleve={{ eleve.pk }}{% endif %}">← Semaine préc.</a>
+    <a class="btn btn-secondaire" href="?{% if eleve %}eleve={{ eleve.pk }}{% endif %}">Cette semaine</a>
+    <a class="btn btn-secondaire" href="?semaine={{ semaine_suiv|date:'Y-m-d' }}{% if eleve %}&eleve={{ eleve.pk }}{% endif %}">Semaine suiv. →</a>
+  </div>
+</div>
+<p class="discret">Semaine du {{ lundi|date:"l j F Y" }}</p>
+
+{% if choix_eleves %}{% include "_choix_eleve.html" %}{% endif %}
+
+{% if classes %}
+<div class="filtres">
+  <form method="get" action="" id="f-classe">
+    <label for="sel-classe">Voir une classe</label>
+    <select id="sel-classe" data-nav>
+      <option value="">—</option>
+      {% for c in classes %}<option value="{% url 'edt:classe' c.pk %}" {% if vue == "classe" and cible.pk == c.pk %}selected{% endif %}>{{ c }}</option>{% endfor %}
+    </select>
+  </form>
+  <form method="get" action="">
+    <label for="sel-ens">Voir un enseignant</label>
+    <select id="sel-ens" data-nav>
+      <option value="">—</option>
+      {% for e in enseignants %}<option value="{% url 'edt:enseignant' e.pk %}" {% if vue == "enseignant" and cible.pk == e.pk %}selected{% endif %}>{{ e }}</option>{% endfor %}
+    </select>
+  </form>
+  {% if user.est_admin %}<div><a class="btn" href="{% url 'edt:modifications' %}">Gérer les modifications</a></div>{% endif %}
+</div>
+{% endif %}
+
+{% if jours %}
+<div class="edt" style="--jours: {{ nb_jours }}">
+  {% for jour in jours %}
+  <section class="edt-jour {% if jour.aujourdhui %}aujourdhui{% endif %}">
+    <h3>{{ jour.nom }} {{ jour.date|date:"d/m" }}</h3>
+    {% for c in jour.cours %}
+      <div class="cours {% if c.annule %}annule{% elif c.modifie %}modifie{% endif %}" style="--couleur: {{ c.matiere.couleur }}">
+        <div class="heure">{{ c.creneau.heure_debut|time:"H:i" }} – {{ c.creneau.heure_fin|time:"H:i" }}</div>
+        <div class="{% if c.annule %}barre{% endif %}"><strong>{{ c.matiere }}</strong></div>
+        {% if vue != "classe" %}<div>{{ c.classe }}</div>{% endif %}
+        {% if vue != "enseignant" %}<div>{{ c.enseignant }}</div>{% endif %}
+        {% if c.salle %}<div>{{ c.salle }}</div>{% endif %}
+        {% if c.modification %}<div class="modif">{{ c.modification.get_type_display }}{% if c.modification.motif %} — {{ c.modification.motif }}{% endif %}</div>{% endif %}
+      </div>
+    {% empty %}
+      <p class="discret">Pas de cours</p>
+    {% endfor %}
+  </section>
+  {% endfor %}
+</div>
+{% else %}
+<div class="carte">Aucun emploi du temps disponible.</div>
+{% endif %}
+{% endblock %}

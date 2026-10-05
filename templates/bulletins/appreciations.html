@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block titre %}Appréciations{% endblock %}
+{% block contenu %}
+<h1>Appréciations — {{ ens.matiere }} · {{ ens.classe }}</h1>
+{% include "_choix_periode.html" %}
+<form method="post">
+  {% csrf_token %}
+  <div class="tableau"><table>
+    <tr><th>Élève</th><th class="num">Moyenne</th><th>Appréciation (600 caractères max.)</th></tr>
+    {% for l in lignes %}
+    <tr><td>{{ l.eleve }}</td><td class="num">{{ l.moyenne|floatformat:2|default:"—" }}</td>
+      <td><textarea name="app_{{ l.eleve.pk }}" rows="2" maxlength="600" aria-label="Appréciation pour {{ l.eleve }}">{{ l.texte }}</textarea></td></tr>
+    {% endfor %}
+  </table></div>
+  <p style="margin-top:1rem"><button type="submit">Enregistrer</button></p>
+</form>
+{% endblock %}

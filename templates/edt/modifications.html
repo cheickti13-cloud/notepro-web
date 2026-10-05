@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block titre %}Modifications de cours{% endblock %}
+{% block contenu %}
+<h1>Changements de salle, remplacements, annulations</h1>
+<div class="grille">
+  <div class="carte">
+    <h2>Nouvelle modification</h2>
+    <form method="post">{% csrf_token %}{% include "_form.html" %}<button type="submit">Enregistrer et notifier</button></form>
+  </div>
+  <div class="carte">
+    <h2>À venir</h2>
+    <div class="tableau"><table>
+      <tr><th>Date</th><th>Cours</th><th>Modification</th><th></th></tr>
+      {% for m in a_venir %}
+      <tr>
+        <td>{{ m.date|date:"D d/m" }} {{ m.creneau.heure_debut|time:"H:i" }}</td>
+        <td>{{ m.creneau.enseignement.matiere }} — {{ m.creneau.enseignement.classe }}</td>
+        <td>{{ m.get_type_display }}{% if m.nouvelle_salle %} → {{ m.nouvelle_salle }}{% endif %}{% if m.remplacant %} → {{ m.remplacant }}{% endif %}</td>
+        <td><form method="post" action="{% url 'edt:supprimer_modification' m.pk %}">{% csrf_token %}<button class="btn-danger" data-confirm="Supprimer cette modification ?">Supprimer</button></form></td>
+      </tr>
+      {% empty %}<tr><td colspan="4" class="discret">Aucune modification prévue.</td></tr>{% endfor %}
+    </table></div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block titre %}Nouveau message{% endblock %}
+{% block contenu %}
+<div class="carte" style="max-width:680px">
+  <h1>Nouveau message</h1>
+  <form method="post">{% csrf_token %}{% include "_form.html" %}
+    <button type="submit">Envoyer</button> <a class="btn btn-secondaire" href="{% url 'messagerie:boite' %}">Annuler</a>
+  </form>
+</div>
+{% endblock %}

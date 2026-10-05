@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block titre %}Notifications{% endblock %}
+{% block contenu %}
+<div class="barre-outils">
+  <h1>Notifications</h1>
+  <form method="post" action="{% url 'messagerie:tout_lu' %}">{% csrf_token %}<button class="btn btn-secondaire">Tout marquer comme lu</button></form>
+</div>
+<div class="tableau"><table>
+  {% for n in notifications %}
+  <tr class="{% if not n.lue %}non-lu{% endif %}">
+    <td style="width:9rem">{{ n.cree_le|date:"d/m H:i" }}</td>
+    <td><span class="etiquette {% if n.importante %}ko{% endif %}">{{ n.get_type_display }}</span></td>
+    <td>{{ n.titre }}</td>
+    <td><form method="post" action="{% url 'messagerie:ouvrir_notification' n.pk %}">{% csrf_token %}<button class="lien">{% if n.lien %}Voir{% else %}Marquer lu{% endif %}</button></form></td>
+  </tr>
+  {% empty %}<tr><td class="discret">Aucune notification.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

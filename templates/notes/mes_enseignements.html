@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block titre %}Notes{% endblock %}
+{% block contenu %}
+<h1>{% if user.est_admin %}Enseignements de l'établissement{% else %}Mes classes et matières{% endif %}</h1>
+<div class="tableau"><table>
+  <tr><th>Classe</th><th>Matière</th>{% if user.est_admin %}<th>Enseignant</th>{% endif %}<th class="num">Coef.</th><th class="num">Évaluations</th><th></th></tr>
+  {% for e in enseignements %}
+  <tr>
+    <td>{{ e.classe }}</td><td>{{ e.matiere }}</td>{% if user.est_admin %}<td>{{ e.enseignant }}</td>{% endif %}
+    <td class="num">{{ e.coefficient|floatformat:"-2" }}</td><td class="num">{{ e.nb_evaluations }}</td>
+    <td><a class="btn btn-secondaire" href="{% url 'notes:evaluations' e.pk %}">Ouvrir</a></td>
+  </tr>
+  {% empty %}<tr><td colspan="6" class="discret">Aucun enseignement pour l'année active.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

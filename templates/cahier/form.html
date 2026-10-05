@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block titre %}{{ titre }}{% endblock %}
+{% block contenu %}
+<div class="carte" style="max-width:680px">
+  <h1>{{ titre }} — {{ ens }}</h1>
+  <form method="post">{% csrf_token %}{% include "_form.html" %}
+    <button type="submit">Enregistrer</button> <a class="btn btn-secondaire" href="{% url 'cahier:enseignement' ens.pk %}">Annuler</a>
+  </form>
+</div>
+{% endblock %}

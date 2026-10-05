@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block titre %}Saisie des notes{% endblock %}
+{% block contenu %}
+<h1>Saisie — {{ ev.titre }}</h1>
+<p class="discret">{{ ev.enseignement }} · {{ ev.date|date:"d/m/Y" }} · {{ ev.periode.nom }} · barème /{{ ev.bareme|floatformat:"-2" }} · coef {{ ev.coefficient|floatformat:"-2" }}
+{% if not ev.publiee %} · <span class="etiquette attente">non visible par les familles</span>{% endif %}</p>
+<p class="discret">Virgule ou point acceptés (ex. 12,5). Laisser vide = pas de note. « Absent » et « Dispensé » ne comptent pas dans la moyenne, « Non rendu » compte 0.</p>
+<form method="post">
+  {% csrf_token %}
+  <div class="tableau"><table>
+    <tr><th>Élève</th><th>Note</th><th>Statut</th><th>Commentaire</th></tr>
+    {% for l in lignes %}
+    <tr>
+      <td>{{ l.eleve }}{% if l.erreur %}<ul class="errorlist"><li>{{ l.erreur }}</li></ul>{% endif %}</td>
+      <td><input type="text" inputmode="decimal" name="note_{{ l.eleve.pk }}" value="{{ l.valeur|default_if_none:'' }}" aria-label="Note de {{ l.eleve }}" size="6"></td>
+      <td><select name="statut_{{ l.eleve.pk }}" aria-label="Statut">{% for v, lib in statuts %}<option value="{{ v }}" {% if v == l.statut %}selected{% endif %}>{{ lib }}</option>{% endfor %}</select></td>
+      <td><input type="text" name="commentaire_{{ l.eleve.pk }}" value="{{ l.commentaire }}" maxlength="200"></td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  <p style="margin-top:1rem"><button type="submit">Enregistrer les notes</button>
+  <a class="btn btn-secondaire" href="{% url 'notes:evaluations' ev.enseignement_id %}">Annuler</a></p>
+</form>
+{% endblock %}

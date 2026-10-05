@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block titre %}Cahier de texte {{ classe }}{% endblock %}
+{% block contenu %}
+<h1>Cahier de texte — {{ classe }}</h1>
+<div class="grille">
+  <section><h2>Devoirs à venir</h2>{% for d in devoirs %}<p class="discret">Pour le {{ d.pour_le|date:"D d/m" }}</p>{% include "cahier/_devoir.html" %}{% empty %}<div class="carte">Aucun devoir à venir.</div>{% endfor %}</section>
+  <section><h2>Dernières séances</h2>{% for c in contenus %}<div class="carte"><div class="discret">{{ c.date|date:"D d/m" }} · {{ c.enseignement.matiere }}</div><h3>{{ c.titre }}</h3><div class="corps">{{ c.contenu }}</div></div>{% empty %}<div class="carte">Aucun contenu.</div>{% endfor %}</section>
+</div>
+{% endblock %}

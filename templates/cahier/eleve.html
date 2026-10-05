@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block titre %}Cahier de texte{% endblock %}
+{% block contenu %}
+<h1>Cahier de texte{% if eleve %} — {{ eleve }}{% endif %}</h1>
+{% include "_choix_eleve.html" %}
+{% if not eleve or not eleve.classe %}<div class="carte">Aucune classe associée.</div>{% else %}
+<div class="grille">
+  <section>
+    <h2>Travail à faire</h2>
+    {% for jour, devoirs in par_jour %}
+      <h3>Pour le {{ jour|date:"l j F" }}</h3>
+      {% for d in devoirs %}
+        <div class="{% if d.fait %}barre{% endif %}">{% include "cahier/_devoir.html" %}</div>
+        {% if user.est_eleve %}
+        <form method="post" action="{% url 'cahier:basculer_fait' d.pk %}" style="margin:-.3rem 0 .6rem">{% csrf_token %}
+          <button class="lien">{% if d.fait %}↺ Marquer comme non fait{% else %}✓ Marquer comme fait{% endif %}</button>
+        </form>
+        {% endif %}
+      {% endfor %}
+    {% empty %}<div class="carte">Aucun devoir à venir.</div>{% endfor %}
+  </section>
+  <section>
+    <h2>Contenus des séances</h2>
+    <form method="get" class="filtres">
+      {% if choix_eleves %}<input type="hidden" name="eleve" value="{{ eleve.pk }}">{% endif %}
+      <div><label for="m">Matière</label><select id="m" name="matiere" data-autosubmit><option value="">Toutes</option>{% for m in matieres %}<option value="{{ m.pk }}" {% if m.pk == matiere_choisie %}selected{% endif %}>{{ m }}</option>{% endfor %}</select></div>
+    </form>
+    {% for c in contenus %}
+      <div class="carte"><div class="discret">{{ c.date|date:"D d/m" }} · {{ c.enseignement.matiere }}</div><h3>{{ c.titre }}</h3><div class="corps">{{ c.contenu }}</div></div>
+    {% empty %}<div class="carte">Aucun contenu.</div>{% endfor %}
+  </section>
+</div>
+{% endif %}
+{% endblock %}

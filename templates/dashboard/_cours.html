@@ -1,0 +1,7 @@
+{% for c in cours %}
+  <div class="cours {% if c.annule %}annule{% elif c.modifie %}modifie{% endif %}" style="--couleur: {{ c.matiere.couleur }}">
+    <span class="heure">{{ c.creneau.heure_debut|time:"H:i" }}–{{ c.creneau.heure_fin|time:"H:i" }}</span>
+    <span class="{% if c.annule %}barre{% endif %}"><strong>{{ c.matiere }}</strong></span> · {{ c.enseignant }}{% if c.salle %} · {{ c.salle }}{% endif %}
+    {% if c.modification %}<div class="modif">{{ c.modification.get_type_display }}{% if c.modification.motif %} — {{ c.modification.motif }}{% endif %}</div>{% endif %}
+  </div>
+{% empty %}<p class="discret">Pas de cours aujourd'hui.</p>{% endfor %}

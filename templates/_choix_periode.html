@@ -1,0 +1,10 @@
+<form method="get" class="filtres">
+  {% if eleve and choix_eleves %}<input type="hidden" name="eleve" value="{{ eleve.pk }}">{% elif eleve and not user.est_eleve %}<input type="hidden" name="eleve" value="{{ eleve.pk }}">{% endif %}
+  <div>
+    <label for="choix-periode">Période</label>
+    <select id="choix-periode" name="periode" data-autosubmit>
+      {% for p in periodes %}<option value="{{ p.pk }}" {% if p.pk == periode.pk %}selected{% endif %}>{{ p.nom }}</option>{% endfor %}
+    </select>
+  </div>
+  <noscript><button type="submit">Afficher</button></noscript>
+</form>

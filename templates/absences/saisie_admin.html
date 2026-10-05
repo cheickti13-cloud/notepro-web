@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block titre %}Saisir une absence{% endblock %}
+{% block contenu %}
+<div class="carte" style="max-width:620px">
+  <h1>Saisir une absence ou un retard</h1>
+  <form method="post">{% csrf_token %}{% include "_form.html" %}
+    <button type="submit">Enregistrer</button> <a class="btn btn-secondaire" href="{% url 'absences:vue_admin' %}">Annuler</a>
+  </form>
+</div>
+{% endblock %}

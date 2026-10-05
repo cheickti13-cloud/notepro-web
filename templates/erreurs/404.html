@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block titre %}Page introuvable{% endblock %}
+{% block contenu %}
+<div class="carte"><h1>Page introuvable</h1><p>La page demandée n'existe pas ou a été déplacée.</p>
+<a class="btn" href="{% url 'dashboard:index' %}">Retour à l'accueil</a></div>
+{% endblock %}

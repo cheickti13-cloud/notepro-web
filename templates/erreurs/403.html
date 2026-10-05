@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block titre %}Accès refusé{% endblock %}
+{% block contenu %}
+<div class="carte"><h1>Accès refusé</h1><p>Vous n'avez pas les droits nécessaires pour accéder à cette page.</p>
+<a class="btn" href="{% url 'dashboard:index' %}">Retour à l'accueil</a></div>
+{% endblock %}

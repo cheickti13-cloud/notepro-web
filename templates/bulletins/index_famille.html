@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block titre %}Bulletins{% endblock %}
+{% block contenu %}
+<h1>Bulletins{% if eleve %} — {{ eleve }}{% endif %}</h1>
+{% include "_choix_eleve.html" %}
+{% if not eleve %}<div class="carte">Aucun élève sélectionné.</div>{% else %}
+<div class="grille">
+  {% for p, publie in periodes %}
+  <div class="carte"><h3>{{ p.nom }}</h3>
+    {% if publie %}<a class="btn" href="{% url 'bulletins:pdf_eleve' eleve.pk p.pk %}">Télécharger le PDF</a>
+    {% else %}<p class="discret">Pas encore disponible.</p>{% endif %}
+  </div>
+  {% empty %}<div class="carte">Aucune période définie.</div>{% endfor %}
+</div>
+{% endif %}
+{% endblock %}

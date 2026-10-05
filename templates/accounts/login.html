@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block titre %}Connexion{% endblock %}
+{% block classe_body %}page-connexion{% endblock %}
+{% block page %}
+<div class="cnx">
+  <section class="cnx-hero">
+    <span class="logo">
+      <span class="logo-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 5c3-1.3 6.5-1.3 10 1 3.5-2.3 7-2.3 10-1v14c-3-1.3-6.5-1.3-10 1-3.5-2.3-7-2.3-10-1z"/><path d="M12 6v14"/></svg></span>
+      NotePro
+    </span>
+    <div>
+      <h1>Votre école, toujours avec vous</h1>
+      <p>Notes, emploi du temps, devoirs, absences et bulletins : la même expérience sur le web et sur l'application mobile.</p>
+    </div>
+    <ul class="atouts">
+      <li><span class="coche"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg></span><span><b>Bulletins</b> disponibles dès la fin du conseil de classe</span></li>
+      <li><span class="coche"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg></span><span><b>Messagerie</b> entre familles, enseignants et administration</span></li>
+      <li><span class="coche"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg></span><span><b>Données chiffrées</b> et protégées</span></li>
+    </ul>
+  </section>
+
+  <section class="cnx-form">
+    <div class="connexion">
+      <h1>Bienvenue sur NotePro</h1>
+      <div class="etab">
+        <span class="etab-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1"/></svg></span>
+        <div><strong>{{ ETABLISSEMENT_NOM }}</strong><small>Espace élèves, familles et personnel</small></div>
+      </div>
+      {% if messages %}
+        <ul class="messages">{% for m in messages %}<li class="msg-{{ m.tags }}">{{ m }}</li>{% endfor %}</ul>
+      {% endif %}
+      <form method="post">
+        {% csrf_token %}
+        {% include "_form.html" %}
+        <input type="hidden" name="next" value="{{ next }}">
+        <button type="submit" class="btn-bloc">Se connecter</button>
+      </form>
+      <p class="discret securite">Mot de passe oublié ? Contactez l'administration de l'établissement.</p>
+      <p class="discret securite">Vos données scolaires sont chiffrées et protégées.</p>
+    </div>
+  </section>
+</div>
+{% endblock %}

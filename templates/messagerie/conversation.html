@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block titre %}{{ conv.sujet }}{% endblock %}
+{% block contenu %}
+<div class="barre-outils">
+  <h1>{{ conv.sujet }}</h1>
+  <form method="post" action="{% url 'messagerie:archiver' conv.pk %}">{% csrf_token %}<button class="btn-secondaire btn">Archiver</button></form>
+</div>
+<p class="discret">Participants : {% for u in participants %}{{ u }} ({{ u.get_role_display }}){% if not forloop.last %}, {% endif %}{% endfor %}</p>
+{% for m in messages_conv %}
+  <div class="message {% if m.auteur_id == user.pk %}moi{% endif %}">
+    <div class="meta"><strong>{{ m.auteur|default:"Compte supprimé" }}</strong> · {{ m.envoye_le|date:"d/m/Y H:i" }}</div>
+    <div class="corps">{{ m.corps }}</div>
+  </div>
+{% endfor %}
+<div class="carte">
+  <form method="post">{% csrf_token %}{% include "_form.html" %}<button type="submit">Répondre</button></form>
+</div>
+{% endblock %}

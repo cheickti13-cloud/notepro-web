@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block titre %}Relevé de notes{% endblock %}
+{% block contenu %}
+<h1>Relevé de notes{% if eleve %} — {{ eleve }}{% endif %}</h1>
+{% include "_choix_eleve.html" %}
+{% if not eleve %}
+  <div class="carte">Aucun élève sélectionné.</div>
+{% elif not releve %}
+  <div class="carte">Aucune note disponible (classe ou période non définie).</div>
+{% else %}
+  {% include "_choix_periode.html" %}
+  <div class="grille">
+    <div class="carte"><div class="discret">Moyenne générale</div><div class="chiffre">{{ releve.moyenne_generale|floatformat:2|default:"—" }}</div></div>
+    <div class="carte"><div class="discret">Moyenne de la classe</div><div class="chiffre">{{ releve.stats_generale.moyenne|floatformat:2|default:"—" }}</div></div>
+    <div class="carte"><div class="discret">Rang</div><div class="chiffre">{% if releve.rang %}{{ releve.rang }}<small>/{{ releve.effectif }}</small>{% else %}—{% endif %}</div></div>
+  </div>
+  <div class="tableau"><table>
+    <tr><th>Matière</th><th class="num">Coef.</th><th>Notes</th><th class="num">Moyenne</th><th class="num">Classe</th><th class="num">Min / Max</th></tr>
+    {% for l in releve.lignes %}
+    <tr>
+      <td><strong>{{ l.enseignement.matiere }}</strong><br><span class="discret">{{ l.enseignement.enseignant }}</span></td>
+      <td class="num">{{ l.enseignement.coefficient|floatformat:"-2" }}</td>
+      <td>{% for x in l.evaluations %}<span title="{{ x.evaluation.titre }} — {{ x.evaluation.date|date:'d/m' }} — coef {{ x.evaluation.coefficient|floatformat:'-2' }}{% if x.note.commentaire %} — {{ x.note.commentaire }}{% endif %}">{% if x.note %}{{ x.note.affichage }}{% else %}—{% endif %}<small class="discret">/{{ x.evaluation.bareme|floatformat:"-2" }}</small></span>{% if not forloop.last %} · {% endif %}{% empty %}<span class="discret">Aucune note</span>{% endfor %}</td>
+      <td class="num"><strong>{{ l.moyenne|floatformat:2|default:"—" }}</strong></td>
+      <td class="num">{{ l.stats.moyenne|floatformat:2|default:"—" }}</td>
+      <td class="num">{% if l.stats.min is not None %}{{ l.stats.min|floatformat:2 }} / {{ l.stats.max|floatformat:2 }}{% else %}—{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  <p class="discret">Survolez une note pour voir le détail de l'évaluation.</p>
+{% endif %}
+{% endblock %}

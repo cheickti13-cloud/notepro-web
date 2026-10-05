@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block titre %}Appel{% endblock %}
+{% block contenu %}
+<h1>Appel — {{ creneau.enseignement.classe }} · {{ creneau.enseignement.matiere }}</h1>
+<p class="discret">{{ jour|date:"l j F Y" }}, {{ creneau.heure_debut|time:"H:i" }} – {{ creneau.heure_fin|time:"H:i" }}{% if deja_fait %} · <span class="etiquette ok">appel déjà enregistré, vous pouvez le corriger</span>{% endif %}</p>
+<form method="post">
+  {% csrf_token %}
+  <div class="tableau"><table>
+    <tr><th>Élève</th><th>Présence</th><th>Retard (min)</th></tr>
+    {% for l in lignes %}
+    <tr>
+      <td>{{ l.eleve }}{% if l.justifiee %} <span class="etiquette ok">justifiée</span>{% endif %}</td>
+      <td>
+        <select name="statut_{{ l.eleve.pk }}" data-statut-appel="min-{{ l.eleve.pk }}" aria-label="Présence de {{ l.eleve }}">
+          <option value="PRESENT" {% if l.statut == "PRESENT" %}selected{% endif %}>Présent</option>
+          <option value="ABSENCE" {% if l.statut == "ABSENCE" %}selected{% endif %}>Absent</option>
+          <option value="RETARD" {% if l.statut == "RETARD" %}selected{% endif %}>En retard</option>
+        </select>
+      </td>
+      <td><input id="min-{{ l.eleve.pk }}" type="number" min="1" max="240" name="minutes_{{ l.eleve.pk }}" value="{{ l.minutes }}" aria-label="Minutes de retard"></td>
+    </tr>
+    {% empty %}<tr><td colspan="3" class="discret">Aucun élève dans cette classe.</td></tr>{% endfor %}
+  </table></div>
+  <p style="margin-top:1rem"><button type="submit">Valider l'appel</button> <a class="btn btn-secondaire" href="{% url 'absences:mes_appels' %}?date={{ jour|date:'Y-m-d' }}">Retour</a></p>
+</form>
+{% endblock %}

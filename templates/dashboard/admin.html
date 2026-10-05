@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block titre %}Accueil{% endblock %}
+{% block contenu %}
+<section class="hero">
+  <div>
+    <span class="hero-tag">{{ aujourd_hui|date:"l j F Y"|capfirst }}{% if annee %} · année {{ annee }}{% endif %}</span>
+    <h1>Tableau de bord · {{ ETABLISSEMENT_NOM }}</h1>
+    {% if annee %}<p>{{ nb_eleves }} élèves répartis dans {{ nb_classes }} classes, {{ nb_enseignants }} enseignants actifs.</p>
+    {% else %}<p><span class="etiquette ko">Aucune année scolaire active : créez-la dans l'administration</span></p>{% endif %}
+  </div>
+  <div class="hero-encart">
+    <small>Justificatifs à valider</small>
+    <div class="chiffre">{{ en_attente }}</div>
+    <a href="{% url 'absences:vue_admin' %}?statut=EN_ATTENTE">Traiter →</a>
+  </div>
+</section>
+
+<div class="grille">
+  <div class="carte tuile">
+    <span class="tuile-ic"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M17 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6.3"/></svg></span>
+    <div class="chiffre">{{ nb_eleves }} / {{ nb_classes }} / {{ nb_enseignants }}</div><span class="discret">élèves / classes / enseignants</span>
+    {% if sans_classe %}<span><span class="etiquette attente">{{ sans_classe }} élève(s) sans classe</span></span>{% endif %}
+  </div>
+  <div class="carte tuile">
+    <span class="tuile-ic orange"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+    <div class="chiffre">{{ stats_jour.absences }} / {{ stats_jour.retards }}</div><span class="discret">absences / retards aujourd'hui</span>
+    <a href="{% url 'absences:vue_admin' %}?debut={{ aujourd_hui|date:'Y-m-d' }}&fin={{ aujourd_hui|date:'Y-m-d' }}">Voir →</a>
+  </div>
+  <div class="carte tuile">
+    <span class="tuile-ic {% if en_attente %}rouge{% else %}vert{% endif %}"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg></span>
+    <div class="chiffre">{{ en_attente }}</div><span class="discret">justificatifs à valider</span>
+    <a href="{% url 'absences:vue_admin' %}?statut=EN_ATTENTE">Traiter →</a>
+  </div>
+</div>
+
+<div class="grille">
+  <div class="carte"><h3>Cours modifiés aujourd'hui</h3>
+    <ul class="liste">
+    {% for m in modifs_jour %}<li><span><strong>{{ m.creneau.heure_debut|time:"H:i" }}</strong> · {{ m.creneau.enseignement.matiere }} {{ m.creneau.enseignement.classe }}{% if m.remplacant %} <span class="discret">({{ m.remplacant }})</span>{% endif %}{% if m.nouvelle_salle %} <span class="discret">({{ m.nouvelle_salle }})</span>{% endif %}</span><span class="etiquette attente">{{ m.get_type_display }}</span></li>{% empty %}<li class="vide">Aucun.</li>{% endfor %}
+    </ul>
+    <a href="{% url 'edt:modifications' %}">Gérer les modifications →</a></div>
+  <div class="carte"><h3>Actions rapides</h3>
+    <div class="raccourcis">
+      <a href="{% url 'admin:accounts_user_add' %}">Créer un compte</a>
+      <a href="{% url 'admin:accounts_eleve_changelist' %}">Élèves et liens parents</a>
+      <a href="{% url 'admin:scolarite_classe_changelist' %}">Classes et enseignements</a>
+      <a href="{% url 'admin:edt_creneau_changelist' %}">Créneaux d'emploi du temps</a>
+      <a href="{% url 'messagerie:nouvelle_annonce' %}">Publier une information</a>
+      <a href="{% url 'bulletins:index' %}">Publication des bulletins</a>
+    </div>
+  </div>
+</div>
+{% include "dashboard/_communs.html" %}
+{% endblock %}

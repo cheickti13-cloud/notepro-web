@@ -1,0 +1,272 @@
+# NotePro — chaîne CI/CD sécurisée
+#
+#   tests ─┐
+#   sast  ─┼─► build + Trivy ─► DAST (OWASP ZAP) ─► déploiement GHCR
+#   owasp ─┘
+#
+# Le déploiement (publication de l'image ghcr.io/<propriétaire>/notepro-web) n'a lieu
+# que sur la branche main du dépôt public, et seulement si toutes les étapes passent.
+name: CI/CD sécurisée
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.12"
+  IMAGE_LOCALE: notepro-web:ci
+  DEPOT_DEPLOIEMENT: cheickti13-cloud/notepro-web
+
+jobs:
+  # ------------------------------------------------------------------ TESTS
+  tests:
+    name: Tests unitaires
+    runs-on: ubuntu-latest
+    env:
+      DEBUG: "True"
+      SECRET_KEY: ci-tests-uniquement
+      FIELD_ENCRYPTION_KEYS: l9Zf8gd_hwdzfDDS70eg1QqVr9YrcaSVHad9WBEDn3g=
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Dépendances
+        run: pip install -r requirements.txt
+      - name: Migrations à jour
+        run: python manage.py makemigrations --check --dry-run
+      - name: Vérifications Django
+        run: python manage.py check
+      - name: Tests
+        run: python manage.py test --verbosity 2
+
+  # ------------------------------------------------------------------- SAST
+  sast:
+    name: SAST (Bandit + Semgrep OWASP Top 10)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Bandit (rapport complet)
+        run: |
+          pip install "bandit[sarif]"
+          bandit -r . -x ./mobile,./.venv,./node_modules -f sarif -o bandit.sarif --exit-zero
+      - name: Bandit (bloquant sur les failles de gravité haute)
+        run: bandit -r . -x ./mobile,./.venv,./node_modules,*/tests.py -lll -iii
+      - name: Semgrep (OWASP Top 10, Django, secrets)
+        run: |
+          pip install semgrep
+          semgrep scan --config p/owasp-top-ten --config p/django --config p/secrets \
+            --exclude mobile --sarif --output semgrep.sarif --metrics off
+      - name: Envoi des résultats dans l'onglet Security
+        if: always()
+        continue-on-error: true   # nécessite GitHub Advanced Security sur un dépôt privé
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: .
+          category: sast
+      - name: Rapports SAST
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapports-sast
+          path: "*.sarif"
+
+  # ------------------------------------------- OWASP : dépendances vulnérables
+  owasp:
+    name: OWASP Dependency-Check + pip-audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: pip-audit (bloquant)
+        run: |
+          pip install pip-audit
+          pip-audit -r requirements.txt --strict --desc
+      - name: OWASP Dependency-Check
+        uses: dependency-check/Dependency-Check_Action@main
+        continue-on-error: true   # base NVD lente sans clé : le rapport reste informatif
+        env:
+          JAVA_HOME: /opt/jdk
+        with:
+          project: notepro-web
+          path: .
+          format: HTML
+          out: rapports-owasp
+          args: >-
+            --enableExperimental
+            --exclude "**/mobile/**"
+            --exclude "**/.venv/**"
+            ${{ secrets.NVD_API_KEY != '' && format('--nvdApiKey {0}', secrets.NVD_API_KEY) || '' }}
+      - name: Rapport OWASP
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-owasp-dependency-check
+          path: rapports-owasp
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------- BUILD + TRIVY
+  build:
+    name: Build Docker + scan Trivy
+    needs: [tests, sast, owasp]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Construction de l'image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: ${{ env.IMAGE_LOCALE }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ env.DEPOT_DEPLOIEMENT }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.title=NotePro
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Trivy — configuration (Dockerfile, secrets)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: config
+          scan-ref: .
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+          skip-dirs: mobile
+      - name: Trivy — image (rapport SARIF)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.IMAGE_LOCALE }}
+          format: sarif
+          output: trivy-image.sarif
+          severity: CRITICAL,HIGH,MEDIUM
+      - name: Trivy — image (bloquant sur CRITICAL corrigeable)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.IMAGE_LOCALE }}
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+      - name: Envoi des résultats Trivy dans l'onglet Security
+        if: always()
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-image.sarif
+          category: trivy
+      - name: Export de l'image testée
+        run: docker save ${{ env.IMAGE_LOCALE }} | gzip > image.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: image-notepro
+          path: image.tar.gz
+          retention-days: 3
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rapport-trivy
+          path: trivy-image.sarif
+          if-no-files-found: ignore
+
+  # -------------------------------------------------------- DAST (OWASP ZAP)
+  dast:
+    name: DAST (OWASP ZAP baseline)
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: image-notepro
+      - name: Démarrage de l'application
+        run: |
+          gunzip -c image.tar.gz | docker load
+          CLE=$(python3 -c "import base64,os;print(base64.urlsafe_b64encode(os.urandom(32)).decode())")
+          docker run -d --name notepro -p 8000:8000 \
+            -e DEBUG=False -e SECURE_SSL_REDIRECT=False \
+            -e SECRET_KEY="$(openssl rand -hex 32)" \
+            -e FIELD_ENCRYPTION_KEYS="$CLE" \
+            -e ALLOWED_HOSTS=localhost,127.0.0.1 \
+            -e SEED_DEMO=1 \
+            ${{ env.IMAGE_LOCALE }}
+          for i in $(seq 1 30); do
+            curl -fsS http://localhost:8000/compte/connexion/ >/dev/null && echo "Application prête" && exit 0
+            sleep 3
+          done
+          docker logs notepro; exit 1
+      - name: OWASP ZAP baseline
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: http://localhost:8000
+          cmd_options: "-a -j"
+          allow_issue_writing: false
+          fail_action: false
+          artifact_name: rapport-zap
+      - name: Journaux de l'application
+        if: always()
+        run: docker logs notepro || true
+
+  # ------------------------------------------------------- DÉPLOIEMENT GHCR
+  deploy:
+    name: Déploiement (image publique GHCR)
+    needs: dast
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && github.repository == 'cheickti13-cloud/notepro-web'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    environment:
+      name: production
+      url: https://github.com/${{ github.repository }}/pkgs/container/notepro-web
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: image-notepro
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publication de l'image validée
+        run: |
+          gunzip -c image.tar.gz | docker load
+          IMAGE=ghcr.io/${{ github.repository_owner }}/notepro-web
+          IMAGE=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')
+          COURT=$(echo "${{ github.sha }}" | cut -c1-7)
+          for TAG in latest "$COURT"; do
+            docker tag ${{ env.IMAGE_LOCALE }} "$IMAGE:$TAG"
+            docker push "$IMAGE:$TAG"
+          done
+          {
+            echo "### Image publiée"
+            echo ""
+            echo '```'
+            echo "docker run -p 8000:8000 -e SECRET_KEY=changez-moi -e SECURE_SSL_REDIRECT=False -e SEED_DEMO=1 \\"
+            echo "  -e FIELD_ENCRYPTION_KEYS=<clé Fernet> $IMAGE:latest"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

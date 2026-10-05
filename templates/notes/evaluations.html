@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block titre %}{{ ens }}{% endblock %}
+{% block contenu %}
+<div class="barre-outils">
+  <h1>{{ ens.matiere }} — {{ ens.classe }}</h1>
+  <a class="btn" href="{% url 'notes:evaluation_creer' ens.pk %}">+ Nouvelle évaluation</a>
+</div>
+{% include "_choix_periode.html" %}
+{% if stats and stats.moyenne is not None %}<p class="discret">Moyenne de la classe : <strong>{{ stats.moyenne|floatformat:2 }}</strong> · min {{ stats.min|floatformat:2 }} · max {{ stats.max|floatformat:2 }}</p>{% endif %}
+<div class="tableau"><table>
+  <tr>
+    <th>Élève</th>
+    {% for ev in evals %}
+      <th class="num"><a href="{% url 'notes:saisie' ev.pk %}" title="Saisir les notes">{{ ev.titre }}</a><br><span class="discret">{{ ev.date|date:"d/m" }} · /{{ ev.bareme|floatformat:"-2" }} · coef {{ ev.coefficient|floatformat:"-2" }}{% if not ev.publiee %} · masquée{% endif %}</span></th>
+    {% endfor %}
+    <th class="num">Moyenne /20</th>
+  </tr>
+  {% for l in lignes %}
+  <tr>
+    <td><a href="{% url 'notes:releve' %}?eleve={{ l.eleve.pk }}&periode={{ periode.pk }}">{{ l.eleve }}</a></td>
+    {% for n in l.notes %}<td class="num">{% if n %}{{ n.affichage }}{% else %}<span class="discret">—</span>{% endif %}</td>{% endfor %}
+    <td class="num"><strong>{{ l.moyenne|floatformat:2|default:"—" }}</strong></td>
+  </tr>
+  {% empty %}<tr><td class="discret">Aucun élève dans cette classe.</td></tr>{% endfor %}
+</table></div>
+{% if evals %}
+<h2>Évaluations de la période</h2>
+<ul>
+  {% for ev in evals %}
+  <li>{{ ev.date|date:"d/m/Y" }} — {{ ev.titre }} ·
+    <a href="{% url 'notes:saisie' ev.pk %}">saisir les notes</a> ·
+    <a href="{% url 'notes:evaluation_modifier' ens.pk ev.pk %}">modifier</a> ·
+    <form class="inline" method="post" action="{% url 'notes:evaluation_supprimer' ev.pk %}">{% csrf_token %}<button class="lien" data-confirm="Supprimer cette évaluation et toutes ses notes ?">supprimer</button></form>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

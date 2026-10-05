@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block titre %}Nouvelle information{% endblock %}
+{% block contenu %}
+<div class="carte" style="max-width:680px">
+  <h1>Nouvelle information</h1>
+  <form method="post">{% csrf_token %}{% include "_form.html" %}<button type="submit">Publier et notifier</button></form>
+</div>
+{% endblock %}

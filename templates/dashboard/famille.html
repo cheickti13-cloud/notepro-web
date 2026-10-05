@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block titre %}Accueil{% endblock %}
+{% block contenu %}
+<section class="hero">
+  <div>
+    <span class="hero-tag">{{ aujourd_hui|date:"l j F Y"|capfirst }}</span>
+    <h1>Bonjour {{ user.first_name|default:user.username }}</h1>
+    {% with r=resumes.0 %}{% if r %}
+    <p>{% if user.est_parent %}{{ r.eleve.user.first_name|default:r.eleve }} a{% else %}Vous avez{% endif %} {{ r.cours|length }} cours aujourd'hui{% if r.devoirs %} et {{ r.devoirs|length }} devoir{{ r.devoirs|length|pluralize }} dans les 7 prochains jours{% endif %}.</p>
+    {% endif %}{% endwith %}
+  </div>
+  {% if nb_messages or nb_notifications %}
+  <div class="hero-encart">
+    <small>À consulter</small>
+    <div class="chiffre">{{ nb_messages|add:nb_notifications }}</div>
+    <small>{{ nb_messages }} message{{ nb_messages|pluralize }} · {{ nb_notifications }} notification{{ nb_notifications|pluralize }}</small>
+  </div>
+  {% endif %}
+</section>
+
+{% for r in resumes %}
+  {% if resumes|length > 1 or user.est_parent %}<h2>{{ r.eleve }} <span class="etiquette info">{{ r.eleve.classe|default:"sans classe" }}</span></h2>{% endif %}
+  <div class="grille">
+    <div class="carte tuile">
+      <span class="tuile-ic"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
+      <div class="chiffre">{{ r.cours|length }}</div><span class="discret">cours aujourd'hui</span>
+    </div>
+    <div class="carte tuile">
+      <span class="tuile-ic vert"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M9 10h6M9 14h6"/></svg></span>
+      <div class="chiffre">{{ r.devoirs|length }}</div><span class="discret">devoirs sur 7 jours</span>
+    </div>
+    <div class="carte tuile">
+      <span class="tuile-ic orange"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+      <div class="chiffre">{{ r.absences.absences }} / {{ r.absences.retards }}</div><span class="discret">absences / retards sur la période</span>
+    </div>
+    <div class="carte tuile">
+      <span class="tuile-ic {% if r.absences.non_justifiees %}rouge{% else %}vert{% endif %}"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg></span>
+      <div class="chiffre">{{ r.absences.non_justifiees }}</div><span class="discret">à justifier</span>
+    </div>
+  </div>
+
+  <div class="grille">
+    <div class="carte"><h3>Cours du jour</h3>
+      {% with cours=r.cours %}{% include "dashboard/_cours.html" %}{% endwith %}
+      <a href="{% url 'edt:eleve' r.eleve.pk %}">Emploi du temps →</a></div>
+    <div class="carte"><h3>Dernières notes</h3>
+      <ul class="liste">
+      {% for n in r.notes %}<li><span>{{ n.evaluation.enseignement.matiere }} <span class="discret">· {{ n.evaluation.titre }}</span></span><strong class="etiquette info">{{ n.affichage }}/{{ n.evaluation.bareme|floatformat:"-2" }}</strong></li>{% empty %}<li class="vide">Aucune note.</li>{% endfor %}
+      </ul>
+      <a href="{% url 'notes:releve' %}{% if user.est_parent %}?eleve={{ r.eleve.pk }}{% endif %}">Relevé complet →</a></div>
+    <div class="carte"><h3>Devoirs des 7 prochains jours</h3>
+      <ul class="liste">
+      {% for d in r.devoirs|slice:":6" %}<li><span><strong>{{ d.enseignement.matiere }}</strong> <span class="discret">· {{ d.titre }}</span></span><span class="etiquette">{{ d.pour_le|date:"D d/m" }}</span></li>{% empty %}<li class="vide">Aucun devoir.</li>{% endfor %}
+      </ul>
+      <a href="{% url 'cahier:index' %}{% if user.est_parent %}?eleve={{ r.eleve.pk }}{% endif %}">Cahier de texte →</a></div>
+  </div>
+  {% if r.absences.non_justifiees %}
+  <ul class="messages"><li class="msg-warning">{{ r.absences.non_justifiees }} absence{{ r.absences.non_justifiees|pluralize }} ou retard{{ r.absences.non_justifiees|pluralize }} à justifier. <a href="{% url 'absences:mes_absences' %}{% if user.est_parent %}?eleve={{ r.eleve.pk }}{% endif %}">Justifier →</a></li></ul>
+  {% endif %}
+{% empty %}<div class="carte">Aucun élève n'est associé à votre compte. Contactez l'administration.</div>{% endfor %}
+{% include "dashboard/_communs.html" %}
+{% endblock %}

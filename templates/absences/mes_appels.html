@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block titre %}Appel{% endblock %}
+{% block contenu %}
+<div class="barre-outils">
+  <h1>Faire l'appel — {{ jour|date:"l j F Y" }}</h1>
+  <form method="get" class="filtres"><div><label for="d">Autre date</label><input id="d" type="date" name="date" value="{{ jour|date:'Y-m-d' }}"></div><div><button type="submit">Afficher</button></div></form>
+</div>
+<div class="tableau"><table>
+  <tr><th>Horaire</th><th>Classe</th><th>Matière</th><th>Salle</th><th>Appel</th><th></th></tr>
+  {% for x in cours %}
+  <tr>
+    <td>{{ x.cours.creneau.heure_debut|time:"H:i" }} – {{ x.cours.creneau.heure_fin|time:"H:i" }}</td>
+    <td>{{ x.cours.classe }}</td><td>{{ x.cours.matiere }}{% if x.cours.modifie %} <span class="etiquette attente">{{ x.cours.modification.get_type_display }}</span>{% endif %}</td>
+    <td>{{ x.cours.salle|default:"—" }}</td>
+    <td>{% if x.fait %}<span class="etiquette ok">Fait</span>{% else %}<span class="etiquette ko">À faire</span>{% endif %}</td>
+    <td><a class="btn {% if x.fait %}btn-secondaire{% endif %}" href="{% url 'absences:appel' x.cours.creneau.pk jour|date:'Y-m-d' %}">{% if x.fait %}Modifier{% else %}Faire l'appel{% endif %}</a></td>
+  </tr>
+  {% empty %}<tr><td colspan="6" class="discret">Aucun cours ce jour-là.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

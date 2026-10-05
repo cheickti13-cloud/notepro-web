@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block titre %}Accueil{% endblock %}
+{% block contenu %}
+<section class="hero">
+  <div>
+    <span class="hero-tag">{{ aujourd_hui|date:"l j F Y"|capfirst }}</span>
+    <h1>Bonjour {{ user.first_name|default:user.username }}</h1>
+    <p>Vous avez {{ cours|length }} cours aujourd'hui.{% if appels_manquants %} {{ appels_manquants }} appel{{ appels_manquants|pluralize }} reste{{ appels_manquants|pluralize:"nt" }} à faire.{% endif %}</p>
+  </div>
+  <div class="hero-encart">
+    <small>Appels à faire</small>
+    <div class="chiffre">{{ appels_manquants }}</div>
+    <a href="{% url 'absences:mes_appels' %}">Faire l'appel →</a>
+  </div>
+</section>
+
+<div class="grille">
+  <div class="carte tuile">
+    <span class="tuile-ic"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
+    <div class="chiffre">{{ cours|length }}</div><span class="discret">cours aujourd'hui</span>
+  </div>
+  <div class="carte tuile">
+    <span class="tuile-ic {% if appels_manquants %}orange{% else %}vert{% endif %}"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg></span>
+    <div class="chiffre">{{ appels_manquants }}</div><span class="discret">appels à faire</span>
+  </div>
+  <div class="carte tuile">
+    <span class="tuile-ic rouge"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/></svg></span>
+    <div class="chiffre">{{ nb_messages }}</div><span class="discret">messages non lus</span>
+  </div>
+</div>
+
+<div class="grille">
+  <div class="carte"><h3>Mes cours du jour</h3>
+    {% for x in cours %}
+      <div class="cours {% if x.cours.modifie %}modifie{% endif %}" style="--couleur: {{ x.cours.matiere.couleur }}">
+        <span class="heure">{{ x.cours.creneau.heure_debut|time:"H:i" }}–{{ x.cours.creneau.heure_fin|time:"H:i" }}</span>
+        <strong>{{ x.cours.matiere }}</strong> · {{ x.cours.classe }}{% if x.cours.salle %} · {{ x.cours.salle }}{% endif %}
+        {% if x.cours.modification %}<div class="modif">{{ x.cours.modification.get_type_display }}</div>{% endif %}
+        <div style="margin-top:.3rem">{% if x.fait %}<span class="etiquette ok">Appel fait</span>{% else %}<a href="{% url 'absences:appel' x.cours.creneau.pk aujourd_hui|date:'Y-m-d' %}">Faire l'appel →</a>{% endif %}</div>
+      </div>
+    {% empty %}<p class="discret">Pas de cours aujourd'hui.</p>{% endfor %}
+  </div>
+  <div class="carte"><h3>Raccourcis</h3>
+    <div class="raccourcis">
+      <a href="{% url 'notes:mes_enseignements' %}">Saisir des notes</a>
+      <a href="{% url 'cahier:index' %}">Cahier de texte</a>
+      <a href="{% url 'bulletins:index' %}">Appréciations</a>
+      {% for c in classes_pp %}<a href="{% url 'bulletins:conseil' c.pk %}">Conseil de classe {{ c }}</a>{% endfor %}
+      <a href="{% url 'messagerie:boite' %}">Messagerie</a>
+    </div>
+  </div>
+</div>
+{% include "dashboard/_communs.html" %}
+{% endblock %}

@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block titre %}Cahier de texte{% endblock %}
+{% block contenu %}
+<h1>Cahier de texte — classes</h1>
+<div class="grille">{% for c in classes %}<div class="carte"><h3>{{ c }}</h3><a class="btn" href="{% url 'cahier:classe' c.pk %}">Consulter</a></div>{% empty %}<div class="carte">Aucune classe.</div>{% endfor %}</div>
+{% endblock %}

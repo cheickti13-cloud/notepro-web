@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block titre %}Messagerie{% endblock %}
+{% block contenu %}
+<div class="barre-outils">
+  <h1>Messagerie</h1>
+  <div><a class="btn btn-secondaire" href="{% url 'messagerie:annonces' %}">Informations de l'établissement</a> <a class="btn" href="{% url 'messagerie:nouveau' %}">+ Nouveau message</a></div>
+</div>
+<div class="tableau"><table>
+  <tr><th>Sujet</th><th>Avec</th><th>Dernier message</th></tr>
+  {% for c in conversations %}
+  <tr class="{% if c.non_lu %}non-lu{% endif %}">
+    <td><a href="{% url 'messagerie:conversation' c.pk %}">{% if c.non_lu %}● {% endif %}{{ c.sujet }}</a></td>
+    <td>{% for u in c.autres %}{{ u }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+    <td>{{ c.dernier_message_le|date:"d/m/Y H:i" }}</td>
+  </tr>
+  {% empty %}<tr><td colspan="3" class="discret">Aucune conversation.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

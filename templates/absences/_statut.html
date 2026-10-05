@@ -1,0 +1,1 @@
+<span class="etiquette {% if a.statut == 'JUSTIFIEE' %}ok{% elif a.statut == 'EN_ATTENTE' %}attente{% else %}ko{% endif %}">{{ a.get_statut_display }}</span>

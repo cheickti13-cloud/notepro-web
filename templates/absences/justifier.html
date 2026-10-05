@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block titre %}Justifier une absence{% endblock %}
+{% block contenu %}
+<div class="carte" style="max-width:560px">
+  <h1>Justifier — {{ absence.eleve }}</h1>
+  <p>{{ absence.get_type_display }} du {{ absence.date|date:"l j F Y" }} ({{ absence.libelle_creneau }})</p>
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}{% include "_form.html" %}
+    <p class="discret">Les informations transmises sont chiffrées et visibles uniquement par vous et la vie scolaire. Évitez d'indiquer des détails médicaux non nécessaires.</p>
+    <button type="submit">Envoyer</button> <a class="btn btn-secondaire" href="{% url 'absences:mes_absences' %}?eleve={{ absence.eleve_id }}">Annuler</a>
+  </form>
+</div>
+{% endblock %}

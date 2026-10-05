@@ -1,0 +1,13 @@
+{% comment %}Sélecteur d'enfant pour les parents ayant plusieurs enfants.{% endcomment %}
+{% if choix_eleves|length > 1 %}
+<form method="get" class="filtres">
+  {% for cle, val in request.GET.items %}{% if cle != "eleve" %}<input type="hidden" name="{{ cle }}" value="{{ val }}">{% endif %}{% endfor %}
+  <div>
+    <label for="choix-eleve">Enfant</label>
+    <select id="choix-eleve" name="eleve" data-autosubmit>
+      {% for e in choix_eleves %}<option value="{{ e.pk }}" {% if e.pk == eleve.pk %}selected{% endif %}>{{ e }} ({{ e.classe|default:"sans classe" }})</option>{% endfor %}
+    </select>
+  </div>
+  <noscript><button type="submit">Afficher</button></noscript>
+</form>
+{% endif %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block titre %}Absences et retards{% endblock %}
+{% block contenu %}
+<h1>Absences et retards{% if eleve %} — {{ eleve }}{% endif %}</h1>
+{% include "_choix_eleve.html" %}
+{% if not eleve %}<div class="carte">Aucun élève sélectionné.</div>{% else %}
+<div class="grille">
+  <div class="carte"><div class="discret">Absences</div><div class="chiffre">{{ stats.absences }}</div></div>
+  <div class="carte"><div class="discret">Retards</div><div class="chiffre">{{ stats.retards }}</div><div class="discret">{{ stats.minutes_retard }} min au total</div></div>
+  <div class="carte"><div class="discret">À justifier</div><div class="chiffre">{{ stats.non_justifiees }}</div></div>
+</div>
+<div class="tableau"><table>
+  <tr><th>Date</th><th>Cours</th><th>Type</th><th>Statut</th><th>Motif</th><th></th></tr>
+  {% for a in absences %}
+  <tr>
+    <td>{{ a.date|date:"D d/m/Y" }}</td><td>{{ a.libelle_creneau }}</td>
+    <td>{{ a.get_type_display }}{% if a.minutes_retard %} ({{ a.minutes_retard }} min){% endif %}</td>
+    <td>{% include "absences/_statut.html" %}{% if a.commentaire_admin %}<br><span class="discret">{{ a.commentaire_admin }}</span>{% endif %}</td>
+    <td>{% if user.est_parent %}{{ a.motif|default:"—" }}{% if a.justificatif %} · <a href="{% url 'absences:justificatif' a.pk %}">document</a>{% endif %}{% else %}{% if a.motif %}Motif transmis{% else %}—{% endif %}{% endif %}</td>
+    <td>{% if user.est_parent and a.est_justifiable %}<a class="btn" href="{% url 'absences:justifier' a.pk %}">Justifier</a>{% endif %}</td>
+  </tr>
+  {% empty %}<tr><td colspan="6" class="discret">Aucune absence ni retard.</td></tr>{% endfor %}
+</table></div>
+{% endif %}
+{% endblock %}
