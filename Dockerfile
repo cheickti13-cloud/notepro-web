@@ -29,7 +29,8 @@ USER notepro
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/compte/connexion/', timeout=4).status == 200 else 1)"
+  CMD python -c "import os,urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:%s/compte/connexion/' % os.environ.get('PORT', '8000'), timeout=4).status == 200 else 1)"
 
 ENTRYPOINT ["sh", "/app/docker-entrypoint.sh"]
-CMD ["gunicorn", "config.wsgi", "--bind", "0.0.0.0:8000", "--workers", "3", "--access-logfile", "-"]
+# PORT est fourni par certains hébergeurs (Render, Heroku…) ; 8000 sinon
+CMD ["sh", "-c", "exec gunicorn config.wsgi --bind 0.0.0.0:${PORT:-8000} --workers ${WEB_CONCURRENCY:-2} --access-logfile -"]

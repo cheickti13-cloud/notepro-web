@@ -38,6 +38,12 @@ if not SECRET_KEY:
 ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", "localhost,127.0.0.1")
 CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
 
+# Hébergement Render : l'adresse publique du service est fournie automatiquement
+RENDER_HOTE = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+if RENDER_HOTE:
+    ALLOWED_HOSTS.append(RENDER_HOTE)
+    CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_HOTE}")
+
 # Nom de l'établissement (application mono-établissement)
 ETABLISSEMENT_NOM = os.environ.get("ETABLISSEMENT_NOM", "Établissement scolaire")
 

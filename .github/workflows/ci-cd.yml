@@ -242,7 +242,7 @@ jobs:
       packages: write
     environment:
       name: production
-      url: https://github.com/${{ github.repository }}/pkgs/container/notepro-web
+      url: ${{ vars.RENDER_URL || format('https://github.com/{0}/pkgs/container/notepro-web', github.repository) }}
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -270,3 +270,26 @@ jobs:
             echo "  -e FIELD_ENCRYPTION_KEYS=<clé Fernet> $IMAGE:latest"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+          echo "IMAGE_DEPLOYEE=$IMAGE:$COURT" >> "$GITHUB_ENV"
+      - name: Déploiement sur Render
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$RENDER_DEPLOY_HOOK" ]; then
+            echo "::notice::Secret RENDER_DEPLOY_HOOK absent : déploiement Render ignoré."
+            exit 0
+          fi
+          # Render tire exactement l'image qui vient d'être scannée et testée
+          IMG=$(python3 -c "import urllib.parse,os;print(urllib.parse.quote(os.environ['IMAGE_DEPLOYEE'], safe=''))")
+          curl -fsS -X POST "${RENDER_DEPLOY_HOOK}&imgURL=${IMG}" -o /dev/null
+          echo "Déploiement Render déclenché pour $IMAGE_DEPLOYEE"
+      - name: Vérification du site public
+        if: vars.RENDER_URL != ''
+        run: |
+          echo "### Site public : ${{ vars.RENDER_URL }}" >> "$GITHUB_STEP_SUMMARY"
+          for i in $(seq 1 40); do
+            CODE=$(curl -s -o /dev/null -w '%{http_code}' "${{ vars.RENDER_URL }}/compte/connexion/" || true)
+            [ "$CODE" = "200" ] && echo "Site en ligne : ${{ vars.RENDER_URL }}" && exit 0
+            echo "Tentative $i : HTTP $CODE"; sleep 15
+          done
+          echo "::warning::Le site ne répond pas encore (le démarrage peut prendre quelques minutes)."
